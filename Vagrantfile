@@ -25,4 +25,13 @@ Vagrant.configure("2") do |config|
       end
     end
   end
+  # add provisioner
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "ansible/playbook.yml"
+    ansible.groups = {
+          "clients" => ["client-User1", "client-User2"],
+          "serveur-central" => ["serveur-central"]
+        }
+  end
+
 end
