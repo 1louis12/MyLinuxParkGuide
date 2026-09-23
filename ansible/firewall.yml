@@ -1,0 +1,52 @@
+- name: Règles communes de pare-feu pour toutes les machines
+  hosts: all
+  become: true
+
+  tasks:
+    - name: S'assurer que UFW est installé
+      apt:
+        name: ufw
+        state: present
+
+    - name: Autoriser le port SSH (22) pour ne pas se bloquer dehors
+      ufw:
+        rule: allow
+        port: '22'
+        proto: tcp
+
+    - name: Définir la politique par défaut (refuser tout ce qui entre)
+      ufw:
+        default: deny
+        direction: incoming
+
+    - name: Définir la politique par défaut (autoriser tout ce qui sort)
+      ufw:
+        default: allow
+        direction: outgoing
+
+
+- name: Règles spécifiques pour le serveur central
+  hosts: serveur-central
+  become: true
+
+  tasks:
+    - name: Autoriser NFS (Port 2049) uniquement pour le réseau privé
+      ufw:
+        rule: allow
+        port: '2049'
+        proto: tcp
+        src: '192.168.56.0/24'
+
+    - name: Activer le pare-feu sur le serveur central
+      ufw:
+        state: enabled
+
+
+- name: Règles spécifiques pour les clients
+  hosts: clients
+  become: true
+
+  tasks:
+    - name: Activer le pare-feu sur les clients (SSH uniquement)
+      ufw:
+        state: enabled

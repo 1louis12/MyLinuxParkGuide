@@ -43,4 +43,13 @@ Vagrant.configure("2") do |config|
         }
   end
 
+  # add provisioner for share server
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "ansible/firewall.yml"
+    ansible.groups = {
+          "clients" => ["client-User1", "client-User2"],
+          "serveur-central" => ["serveur-central"]
+        }
+  end
+
 end
