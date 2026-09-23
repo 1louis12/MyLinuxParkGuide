@@ -49,3 +49,80 @@ sudo /Applications/VMware\ Fusion.app/Contents/Library/vmnet-cli --start
 # Vagrant & Ansible
 [doc]('https://developer.hashicorp.com/vagrant/docs/provisioning/ansible_intro')
 ## 
+
+## Note — Utilisateurs et permissions avec Ansible
+
+### Exemple : utilisateur sans privilèges root
+
+Après le provisionnement Ansible, on peut vérifier que l'utilisateur créé ne possède pas de privilèges administrateur.
+
+```bash
+vagrant ssh client-User1
+```
+
+Puis :
+
+```bash
+vagrant@client-User1:~$ sudo su - user1
+user1@client-User1:~$ whoami
+user1
+```
+
+L'utilisateur `user1` existe bien et fonctionne avec son propre environnement.
+
+Tentative d'utilisation de `sudo` :
+
+```bash
+user1@client-User1:~$ sudo apt update
+sudo: I'm sorry, user1. I'm afraid I can't do that
+```
+
+Le refus confirme que `user1` ne possède pas de règle `sudo` lui permettant d'exécuter cette commande avec les privilèges root.
+
+### À retenir
+
+```text
+Vagrant
+   ↓
+VM client-User1
+   ↓
+Ansible (become: true)
+   ↓
+création de user1
+   ↓
+user1 = utilisateur normal
+   ↓
+pas de privilèges sudo
+```
+
+### Block exécuté : 
+
+```
+vagrant@client-User1:~$ whoami
+vagrant
+vagrant@client-User1:~$ sudo su - user1
+user1@client-User1:~$ whoami
+user1
+user1@client-User1:~$ sudo apt update
+sudo: I'm sorry user1. I'm afraid I can't do that
+user1@client-User1:~$ exit
+```
+
+`become: true` donne les privilèges nécessaires à **Ansible pendant l'exécution du playbook**.
+Cela ne donne pas automatiquement les privilèges root à `user1`.
+
+### Vérifications utiles
+
+```bash
+whoami
+id
+groups
+sudo -l
+```
+
+Pour vérifier les règles sudo :
+
+```bash
+cat /etc/sudoers
+ls /etc/sudoers.d/
+```
