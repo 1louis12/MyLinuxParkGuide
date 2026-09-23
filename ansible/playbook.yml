@@ -13,3 +13,26 @@
           - net-tools
 
         state: present
+
+- name: Configuration des utilisateurs et permissions sur les clients
+  hosts: clients
+  become: true
+  
+  vars:
+    config_utilisateurs:
+      client-User1:
+        nom: "user1"
+      client-User2:
+        nom: "user2"
+
+  tasks:
+    - name: Créer l'utilisateur dédié pour la machine (sans droits root)
+      user:
+        name: "{{ config_utilisateurs[inventory_hostname].nom }}"
+        shell: /bin/bash
+        create_home: true
+
+    - name: S'assurer qu'aucune règle sudo spécifique n'existe pour cet utilisateur
+      file:
+        path: "/etc/sudoers.d/{{ config_utilisateurs[inventory_hostname].nom }}"
+        state: absent
