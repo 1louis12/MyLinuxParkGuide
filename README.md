@@ -126,3 +126,6 @@ Pour vérifier les règles sudo :
 cat /etc/sudoers
 ls /etc/sudoers.d/
 ```
+
+## Add share File 
+On peut share un serveur SQL. Pour la simplicité je pare sur un directory simple pour avoir la main.

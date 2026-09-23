@@ -1,0 +1,57 @@
+# Configuration de dossier partager
+
+- name: Configuration du dossier partagé (NFS) sur le serveur central
+  hosts: serveur-central
+  become: true
+
+  tasks:
+    - name: Installer le paquet serveur NFS
+      apt:
+        name: nfs-kernel-server
+        state: present
+
+    - name: Créer le dossier physique à partager
+      file:
+        path: /var/nfs/partage_commun
+        state: directory
+        # tous les droits pour simplifier les tests
+        mode: '0777' 
+        owner: nobody
+        group: nogroup
+
+    - name: Déclarer le dossier partagé sur le réseau (Configuration exports)
+      lineinfile:
+        path: /etc/exports
+        # autoriser tout le sous-réseau 192.168.56.x à y accéder
+        line: '/var/nfs/partage_commun 192.168.56.0/24(rw,sync,no_subtree_check)'
+        state: present
+
+    - name: Appliquer la configuration et redémarrer le service NFS
+      systemd:
+        name: nfs-kernel-server
+        state: restarted
+        enabled: yes
+
+
+- name: Configuration du montage NFS sur les clients
+  hosts: clients
+  become: true
+
+  tasks:
+    - name: Installer les outils client NFS
+      apt:
+        name: nfs-common
+        state: present
+
+    - name: Créer le point de montage local (le dossier de réception)
+      file:
+        path: /mnt/serveur_central
+        state: directory
+
+    - name: Connecter (monter) le dossier partagé du serveur central
+      mount:
+        path: /mnt/serveur_central
+        src: 192.168.56.10:/var/nfs/partage_commun
+        fstype: nfs
+        opts: rw,sync,hard,intr
+        state: mounted
